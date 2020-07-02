@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+include /usr/share/dpkg/architecture.mk
+ifeq ($(origin CC),default)
+CC = $(DEB_HOST_GNU_TYPE)-gcc
+endif
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	./configure CC=$(CC) VLOCK_GROUP=root EXTRA_CFLAGS="$(CFLAGS)" EXTRA_LDFLAGS="$(LDFLAGS)"
+	sed -i 's/new\.so//' config.mk # disable unfixably insecure module #702705
+
+# There are some issues in tests. So, do nothing.
+override_dh_auto_test:
+
+override_dh_auto_build:
+	dh_auto_build -- PREFIX=/usr
+
+override_dh_auto_install:
+	dh_auto_install -- PREFIX=/usr
+
+override_dh_installexamples:
+	dh_installexamples --exclude=Makefile
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 0755 debian/vlock/usr/lib/vlock/modules/*.so
+	chmod 4755 debian/vlock/usr/sbin/vlock-main

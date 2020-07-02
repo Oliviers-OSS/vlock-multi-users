@@ -1,0 +1,23 @@
+vlock for Debian
+----------------
+
+vlock is a denial of service tool.  Linux allows any user logged into the
+virtual console to lock the system completely.  vlock takes this one step
+further and potentially grants this ability (and potentially other, even more
+hazardous ones) to any user through the use of plugins.
+
+The debian packages sets permissions that allow only users in the vlock
+group to run dangerous modules.  Others will still be able to lock their own
+console or terminal and run plugins that are considered secure. But they
+are for example not allowed to lock all consoles.
+
+Scripts
+-------
+
+You can extend the functionality of vlock with scripts. Some example scripts
+have been placed in /usr/share/doc/vlock/examples/scripts/. To use on of them
+install it to /usr/lib/vlock/scripts and make it executable. Scripts will be
+executed as the user executing vlock. For more information see
+/usr/share/doc/vlock/PLUGINS.
+
+ -- Alexander Wirt <formorer@debian.org>  Sun, 25 May 2008 16:33:29 +0200

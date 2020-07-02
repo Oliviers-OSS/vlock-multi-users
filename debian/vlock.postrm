@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "purge" ]; then
+    #remove overrides
+    for i in /usr/sbin/vlock-main \
+             /usr/lib/vlock/modules/new.so \
+             /usr/lib/vlock/modules/nosysrq.so \
+             /usr/lib/vlock/modules/all.so
+    do
+	if dpkg-statoverride --list "$i" >/dev/null; then
+	    dpkg-statoverride --remove "$i"
+	fi
+    done
+fi
+
+#DEBHELPER#

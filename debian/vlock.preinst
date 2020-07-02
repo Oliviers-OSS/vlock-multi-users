@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+if test "$1" = upgrade -a "$2" = 2.2.2-6; then
+	# broken postrm removes vlock group during upgrade #838351
+	rm -f ${DPKG_ROOT:-}/var/lib/dpkg/info/vlock.postrm
+fi
+
+#DEBHELPER#

@@ -1,0 +1,18 @@
+vlock (2.2.2-4) unstable; urgency=medium
+
+  This update disables the new.so plugin and thus the --new switch, because it
+  proved too hard to fix it properly. See #702705.
+
+ -- Helmut Grohne <helmut@subdivi.de>  Fri, 04 Jul 2014 19:35:53 +0200
+
+vlock (2.0-1) unstable; urgency=low
+
+  vlock 2.0 expands the user's ability to lock a machine in two ways. First is
+  the ability to lock the entire console display without access to a virtual
+  console, i.e. from an X11 or even an SSH session. Secondly, SysRQ keys may be
+  disabled while the entire console display is locked. These two operations are
+  priviledged and should be restricted. Therefore, to be allowed to do either
+  of these a user must be added to the group 'vlock'. See
+  /usr/share/doc/vlock/SECURITY for more information.
+ 
+ -- Alexander Wirt <formorer@formorer.de>  Mon, 13 Aug 2007 19:39:12 +0200

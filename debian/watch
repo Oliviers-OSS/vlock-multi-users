@@ -1,0 +1,8 @@
+# There is no upstream anymore.
+# Former versions were found at:
+# http://cthulhu.c3d2.de/~toidinamai/vlock/archive/vlock-([\d\.]*)\.tar.gz
+
+# Fake watch to tell about the upstream homepage:
+version=4
+opts=dversionmangle=s/.*/0.No-Site/ \
+https://people.debian.org/~eriberto/ FakeWatchNoUpstreamSiteForThisPackage-(\d\S+)\.gz

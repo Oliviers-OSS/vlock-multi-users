@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -e
+
+# inspired by the tor postinst script
+# checking vlock group
+
+gid=`getent group vlock | cut -d ":" -f 3`
+
+# if there is the uid the account is there and we can do
+# the sanit(ar)y checks otherwise we can safely create it.
+
+if [ -z "$gid" ]; then
+    # what this might mean?? oh creating a system l^Huser!
+    addgroup --quiet \
+            --system \
+	    vlock 
+fi
+
+#They are not available anymore, so they can be safely removed if they exist. 
+
+for i in /usr/sbin/vlock-nosysrq /usr/sbin/vlock-new /usr/sbin/vlock-current /usr/lib/vlock/modules/new.so
+do
+	# only do something when no setting exists
+	if dpkg-statoverride --list $i >/dev/null 2>&1
+	then
+		dpkg-statoverride --remove $i 
+	fi
+done
+
+# no statoverrides necessary for the following files anymore
+for i in /usr/lib/vlock/modules/all.so /usr/sbin/vlock-main; do
+	if dpkg-statoverride --list "$i" >/dev/null; then
+		dpkg-statoverride --remove "$i"
+	fi
+done
+
+#privileged modules
+
+for i in /usr/lib/vlock/modules/nosysrq.so
+do
+	# only do something when no setting exists
+	if ! dpkg-statoverride --list $i >/dev/null 2>&1
+	then
+		dpkg-statoverride --update --add root vlock 754 $i
+	fi
+done
+
+
+#DEBHELPER#
+
+exit 0

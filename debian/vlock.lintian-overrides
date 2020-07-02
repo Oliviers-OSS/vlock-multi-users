@@ -1,0 +1,6 @@
+# The following words are used as options in upstream source code.
+vlock: spelling-error-in-binary usr/lib/vlock/modules/nosysrq.so preceeds precedes
+vlock: spelling-error-in-binary usr/sbin/vlock-main preceeds precedes
+
+# The suid is necessary for this command
+vlock: setuid-binary usr/sbin/vlock-main 4755 root/root

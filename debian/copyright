@@ -1,0 +1,103 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: vlock
+Upstream-Contact: Frank Benkstein <frank-vlock@benkstein.net,
+                                   frank@benkstein.net>>
+Source: http://cthulhu.c3d2.de/~toidinamai/vlock/archive/
+
+Files: *
+Copyright: 1994-1999 Michael K. Johnson <johnsonm@redhat.com>
+           2007      Rene Kuettner <rene@bitkanal.net>
+           2007-2008 Frank Benkstein <frank-vlock@benkstein.net>
+License: GPL-2
+Comment: vlock.c from vlock-0.8 shows that Michael K. Johnson
+         started the development in 1994. For more details, see
+         vlock at snapshot.debian.org[1].
+         [1] http://snapshot.debian.org/package/vlock/0.8-3/
+
+Files: modules/caca.c
+       modules/example_module.c
+       scripts/alsa_mute.sh
+       scripts/amarok.sh
+       scripts/example_script.sh
+       scripts/hibernate.sh
+       scripts/mplayer.sh
+       scripts/thinkpad_light.sh
+Copyright: 1998      Michele Bini <mibin@tin.it>
+           2003-2006 Jean-Yves Lamoureux <jylam@lnxscene.org>
+           2004-2006 Sam Hocevar <sam@zoy.org>
+           2007      Frank Benkstein <frank-vlock@benkstein.net>
+License: DWTFYWT
+
+Files: src/auth-pam.c
+       src/prompt.c
+       src/prompt.h
+Copyright: 2002-2003 Networks Associates Technology, Inc.
+           2007      Frank Benkstein <frank-vlock@benkstein.net>
+License: GPL-2 and BSD-3-Clause
+
+Files: debian/*
+Copyright: 1996-1997 Dominik Kubla <Dominik.Kubla@Uni-Mainz.DE>
+           1997-1998 Juan Cespedes <cespedes@debian.org>
+           1999-2003 Zephaniah E. Hull <warp@debian.org>
+           2002      David Kimdon <dwhedon@debian.org>
+           2006      Peter Palfrader <weasel@debian.org>
+           2006-2008 Alexander Wirt <formorer@debian.org>
+           2014      Helmut Grohne <helmut@subdivi.de>
+           2016      Joao Eriberto Mota Filho <eriberto@debian.org>
+License: GPL-2
+
+License: GPL-2
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 2 of the License.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+License: DWTFYWT
+ DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ Version 2, December 2004
+ .
+ Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
+ .
+ Everyone is permitted to copy and distribute verbatim or modified
+ copies of this license document, and changing it is allowed as long
+ as the name is changed.
+ .
+ DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+ .
+  0. You just DO WHAT THE FUCK YOU WANT TO.
+
+License: BSD-3-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote
+    products derived from this software without specific prior written
+    permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.

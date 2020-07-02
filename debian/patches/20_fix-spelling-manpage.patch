@@ -1,0 +1,16 @@
+Description: fix a spelling error in manpage.
+Author: Joao Eriberto Mota Filho <eriberto@debian.org>
+Last-Update: 2016-08-28
+Index: vlock-2.2.2/man/vlock-plugins.5
+===================================================================
+--- vlock-2.2.2.orig/man/vlock-plugins.5
++++ vlock-2.2.2/man/vlock-plugins.5
+@@ -30,7 +30,7 @@ switching is locked by the "all" plugin.
+ \fB-s,--disable-sysrq\fR option to vlock(1).
+ .PP
+ .SH "ADDITIONAL PLUGINS"
+-The following plugins are only available if explicitely selected at build time:
++The following plugins are only available if explicitly selected at build time:
+ .PP
+ .B caca
+ .IP
