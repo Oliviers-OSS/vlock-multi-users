@@ -52,11 +52,18 @@
 #include "auth.h"
 #include "prompt.h"
 
+typedef struct vlock_pam_data_ {
+	const char *user;
+	struct timespec *timeout;
+} vlock_pam_data;
+
 static int conversation(int num_msg, const struct pam_message **msg, struct
                         pam_response **resp, void *appdata_ptr)
 {
   struct pam_response *aresp;
-  struct timespec *timeout = appdata_ptr;
+  vlock_pam_data *data = (vlock_pam_data *)appdata_ptr;
+  struct timespec *timeout = data->timeout;
+  const char *user = data->user;
 
   if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG)
     return PAM_CONV_ERR;
@@ -72,9 +79,16 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
           goto fail;
         break;
       case PAM_PROMPT_ECHO_ON:
-        aresp[i].resp = prompt(msg[i]->msg, timeout);
-        if (aresp[i].resp == NULL)
-          goto fail;
+    	if (user) {
+    		aresp[i].resp = user;
+    		printf("%s\n",msg[i]->msg);
+    	} else {
+    		aresp[i].resp = prompt(msg[i]->msg, timeout);
+    		if (aresp[i].resp == NULL)
+    		   goto fail;
+    		data->user = strdup(aresp[i].resp);
+    	}
+        printf("%s\n",aresp[i].resp);
         break;
       case PAM_TEXT_INFO:
       case PAM_ERROR_MSG:
@@ -114,9 +128,13 @@ bool auth(const char *user, struct timespec *timeout)
   pam_handle_t *pamh;
   int pam_status;
   int pam_end_status;
+  vlock_pam_data data = {
+    .user = user,
+    .timeout = timeout
+  };
   struct pam_conv pamc = {
     .conv = conversation,
-    .appdata_ptr = timeout,
+    .appdata_ptr = &data,
   };
 
   /* initialize pam */
@@ -141,16 +159,22 @@ bool auth(const char *user, struct timespec *timeout)
   }
 
   /* put the username before the password prompt */
-  fprintf(stderr, "%s's ", user);
-  fflush(stderr);
+  if (user) {
+	  fprintf(stderr, "%s's ", user);
+	  fflush(stderr);
+  }
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 
+  log_session_access(data.user,(PAM_SUCCESS == pam_status));
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
   }
 
 end:
+  if (!user) {
+	  free(data.user);
+  }
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 

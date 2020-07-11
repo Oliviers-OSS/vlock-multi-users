@@ -23,4 +23,8 @@ struct timespec;
  */
 bool auth(const char *user, struct timespec *timeout);
 
+/*
+ * Log, using syslog (facility auth), the login access
+ * failures and success
+ */
 int log_session_access(const char *newuser,bool success);

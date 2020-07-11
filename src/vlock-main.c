@@ -99,6 +99,9 @@ int log_session_access(const char *newuser,bool success)
   }
 
   if (success) {
+	  if (!newuser) {
+		  newuser = "???";
+	  }
 	  syslog(LOG_NOTICE,"user %s entering into %s's session",newuser,username);
   } else {
 	  syslog(LOG_ERR,"user %s authentication has failed",username);
@@ -137,7 +140,7 @@ static inline void log_session_lock() {
 	const char *root_mode = ",root";
 #endif /* NO_ROOT_PASS */
 
-	if ((parameters.modes & e_MultiUsers) != e_MultiUsers) {
+	if ((parameters.modes & e_MultiUsers) == e_MultiUsers) {
 		mode = "multi-users";
 	}
 	syslog(LOG_NOTICE,"User %s's session is now locked (%s%s)",username,mode,root_mode);
@@ -274,6 +277,10 @@ void display_auth_tries(void)
     fprintf(stderr, "%d failed authentication %s.\n", auth_tries, auth_tries > 1 ? "tries" : "try");
 }
 
+void log_program_end(void) {
+	syslog(LOG_NOTICE,"vlock ended");
+}
+
 #ifdef USE_PLUGINS
 static void call_end_hook(void)
 {
@@ -390,13 +397,13 @@ int main(int argc, char *const argv[])
 
   block_signals();
 
-
   if ((parameters.modes & e_MultiUsers) != e_MultiUsers) {
 	  username = get_username();
 	  if (username == NULL)
 	      fatal_perror("vlock: could not get username");
   }
 
+  ensure_atexit(log_program_end);
   ensure_atexit(display_auth_tries);
 
 #ifdef USE_PLUGINS
