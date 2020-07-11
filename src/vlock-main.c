@@ -279,6 +279,7 @@ void display_auth_tries(void)
 
 void log_program_end(void) {
 	syslog(LOG_NOTICE,"vlock ended");
+	closelog();
 }
 
 #ifdef USE_PLUGINS
@@ -345,14 +346,14 @@ static int parse_cmdLine(int argc,char *const argv[])
             case 'u':
                parameters.modes |= e_MultiUsers;
                break;
-//#ifdef VLOCK_ENABLE_PLUGINS
+#ifdef USE_PLUGINS
 		   case 'n':
 			  parameters.modes |= e_NewVirtualConsole;
 			  break;
 		   case 's':
 			  parameters.modes |= e_SysReq;
 			  break;
-//#endif /* VLOCK_ENABLE_PLUGINS */
+#endif /* USE_PLUGINS */
            case 'h':
               printHelp(NULL);
               exit(EXIT_SUCCESS);
@@ -439,7 +440,7 @@ int main(int argc, char *const argv[])
   } else if (argc > 1) {
     fatal_error("vlock: plugin support disabled");
   }
-#endif
+#endif /* !USE_PLUGINS */
 
   if (!isatty(STDIN_FILENO))
     fatal_error("vlock: stdin is not a terminal");
@@ -450,8 +451,6 @@ int main(int argc, char *const argv[])
   auth_loop(username);
 
   free(username);
-
-  closelog();
 
   return error;
 }

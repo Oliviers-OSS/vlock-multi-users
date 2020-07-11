@@ -56,14 +56,14 @@ typedef enum ModeValue_ {
                 O(multi-user,u," :ask user name before password to allow unlock" EOL NLT "accountability on a generic user session",NO_ARG)
 
 
-//#ifdef VLOCK_ENABLE_PLUGINS
+#ifdef USE_PLUGINS
 #define CMDLINE_PLUGINS_OPTS_TABLE \
 		O(new,n," allocate a new virtual console before locking," EOL NLT "implies --all.",NO_ARG) \
 		O(disable-sysrq,s," disable SysRq while consoles are locked to" EOL NLT "prevent killing vlock with SAK.",NO_ARG) \
-		O(timeout,t,"<seconds>: run screen saver plugins" EOL NLT "after the given amount of time.",NO_ARG) \
-//#else /* VLOCK_ENABLE_PLUGINS */
-//#define CMDLINE_PLUGINS_OPTS_TABLE
-//#endif /* VLOCK_ENABLE_PLUGINS */
+		O(timeout,t,"<seconds>: run screen saver plugins" EOL NLT "after the given amount of time.",NO_ARG)
+#else /* USE_PLUGINS */
+#define CMDLINE_PLUGINS_OPTS_TABLE
+#endif /* USE_PLUGINS */
 
 #define CMDLINE_OPTS_TABLE \
 		CMDLINE_CMN_OPTS_TABLE \
