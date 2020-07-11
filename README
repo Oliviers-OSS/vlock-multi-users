@@ -43,4 +43,8 @@ To make vlock switch to a new console before locking, use the -n or
 an X11 session.  The -n flag implies -a and thus all warnings about -a
 also apply to -n.
 
-vlock is maintained by Frank Benkstein <frank-vlock@benkstein.net>.
+original vlock is maintained by Frank Benkstein <frank-vlock@benkstein.net>.
+
+Multi-users patch: to allow any user, after successful authentication, 
+to log on another user's session (useful for test or supervisor bench 
+running on a dedicated account for example).
