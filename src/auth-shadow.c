@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
+#include <errno.h>
 
 #include <sys/mman.h>
 
@@ -39,17 +41,35 @@ bool auth(const char *user, struct timespec *timeout)
   char *msg;
   struct spwd *spw;
   int result = false;
+  char *username = (char *)user;
 
+  if (NULL == user) {
+	  username = prompt("Login: ", timeout);
+	  if (NULL == username) {
+		  goto out_pwd;
+	  }
+	  printf("%s\n",username); /* workaround */
+  }
   /* format the prompt */
-  if (asprintf(&msg, "%s's Password: ", user) < 0)
+  if (asprintf(&msg, "%s's Password: ", username) < 0)
     return false;
 
-  if ((pwd = prompt_echo_off(msg, timeout)) == NULL)
-    goto out_pwd;
+  if ((pwd = prompt_echo_off(msg, timeout)) == NULL) {
+	  log_session_access(username,0);
+	  goto out_pwd;
+  }
 
   /* get the shadow password */
-  if ((spw = getspnam(user)) == NULL)
-    goto out_shadow;
+  if ((spw = getspnam(username)) == NULL) {
+	  const int error = errno;
+	  if (EACCES == error) {
+		  fprintf(stderr,"Installation error: vlock running account must be part of the shadow group !\n");
+	  } else {
+		  perror("vlock: getspnam()");
+	  }
+
+	  goto out_shadow;
+  }
 
   /* hash the password */
   if ((cryptpw = crypt(pwd, spw->sp_pwdp)) == NULL) {
@@ -58,6 +78,8 @@ bool auth(const char *user, struct timespec *timeout)
   }
 
   result = (strcmp(cryptpw, spw->sp_pwdp) == 0);
+
+  log_session_access(username,result);
 
   if (!result) {
     sleep(1);
@@ -74,6 +96,10 @@ out_shadow:
 out_pwd:
   /* free the prompt */
   free(msg);
+
+  /* free allocated username in multiusers mode */
+  if (!user)
+	  free(username);
 
   return result;
 }

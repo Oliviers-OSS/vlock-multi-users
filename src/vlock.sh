@@ -10,6 +10,12 @@
 # expressly forbidden without prior written permission from
 # the author.
 
+# trace/debug mode
+if [ "-x" = "x-x" ] ; then
+   set -x
+   shift
+fi
+
 # Ignore some signals.
 trap : HUP INT QUIT TSTP
 
@@ -58,6 +64,8 @@ print_help() {
   echo >&2 "       switch to other virtual consoles."
   echo >&2 "-a or --all: lock all virtual consoles by preventing other users"
   echo >&2 "       from switching virtual consoles."
+  echo >&2 "-u or --multi-users: ask user name before password to allow unlock"
+  echo >&2 "       accountability on a generic user session"
   if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     echo >&2 "-n or --new: allocate a new virtual console before locking,"
     echo >&2 "       implies --all."
@@ -165,6 +173,10 @@ main() {
         unset plugins
         shift
         ;;
+      -u|--user)
+        multiusermode="-u"
+        shift
+        ;;
       -n|--new)
         plugins="${plugins} new"
         shift
@@ -226,9 +238,9 @@ main() {
   export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
   if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
-    exec "${VLOCK_MAIN}" ${plugins} ${VLOCK_PLUGINS} "$@"
+    exec "${VLOCK_MAIN}" ${multiusermode} ${plugins} ${VLOCK_PLUGINS} "$@"
   else
-    exec "${VLOCK_MAIN}" ${plugins}
+    exec "${VLOCK_MAIN}" ${multiusermode} ${plugins}
   fi
 }
 

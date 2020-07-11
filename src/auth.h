@@ -22,3 +22,5 @@ struct timespec;
  * functions below if they are called.
  */
 bool auth(const char *user, struct timespec *timeout);
+
+int log_session_access(const char *newuser,bool success);
