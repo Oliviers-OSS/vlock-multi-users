@@ -44,31 +44,31 @@ bool auth(const char *user, struct timespec *timeout)
   char *username = (char *)user;
 
   if (NULL == user) {
-	  username = prompt("Login: ", timeout);
-	  if (NULL == username) {
-		  goto out_pwd;
-	  }
-	  printf("%s\n",username); /* workaround */
+    username = prompt("Login: ", timeout);
+    if (NULL == username) {
+      goto out_pwd;
+    }
+    printf("%s\n",username); /* workaround */
   }
   /* format the prompt */
   if (asprintf(&msg, "%s's Password: ", username) < 0)
     return false;
 
   if ((pwd = prompt_echo_off(msg, timeout)) == NULL) {
-	  log_session_access(username,0);
-	  goto out_pwd;
+    log_session_access(username,0);
+    goto out_pwd;
   }
 
   /* get the shadow password */
   if ((spw = getspnam(username)) == NULL) {
-	  const int error = errno;
-	  if (EACCES == error) {
-		  fprintf(stderr,"Installation error: vlock running account must be part of the shadow group !\n");
-	  } else {
-		  perror("vlock: getspnam()");
-	  }
+    const int error = errno;
+    if (EACCES == error) {
+      fprintf(stderr,"Installation error: vlock running account must be part of the shadow group !\n");
+    } else {
+      perror("vlock: getspnam()");
+    }
 
-	  goto out_shadow;
+    goto out_shadow;
   }
 
   /* hash the password */
@@ -99,7 +99,7 @@ out_pwd:
 
   /* free allocated username in multiusers mode */
   if (!user)
-	  free(username);
+    free(username);
 
   return result;
 }

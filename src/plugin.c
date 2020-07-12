@@ -67,7 +67,7 @@ void destroy_plugin(struct plugin *p)
   /* Destroy dependency lists. */
   for (size_t i = 0; i < nr_dependencies; i++) {
     list_delete_for_each(p->dependencies[i], dependency_item)
-      free(dependency_item->data);
+    free(dependency_item->data);
 
     list_free(p->dependencies[i]);
   }

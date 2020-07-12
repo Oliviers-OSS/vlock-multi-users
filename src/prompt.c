@@ -108,15 +108,15 @@ before_select:
   /* Wait until a string was entered. */
   if (select(STDIN_FILENO + 1, &readfds, NULL, NULL, timeout_val) != 1) {
     switch (errno) {
-      case 0:
-        fprintf(stderr, "timeout!\n");
-        goto out;
-      case EINTR:
-        /* A signal was caught. Restart. */
-        goto before_select;
-      default:
-        perror("vlock: select() on stdin failed");
-        goto out;
+    case 0:
+      fprintf(stderr, "timeout!\n");
+      goto out;
+    case EINTR:
+      /* A signal was caught. Restart. */
+      goto before_select;
+    default:
+      perror("vlock: select() on stdin failed");
+      goto out;
     }
   }
 

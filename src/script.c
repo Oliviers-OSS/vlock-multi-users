@@ -52,14 +52,14 @@ static bool init_script(struct plugin *p);
 static void destroy_script(struct plugin *p);
 static bool call_script_hook(struct plugin *p, const char *hook_name);
 
-struct plugin_type *script = &(struct plugin_type){
+struct plugin_type *script = &(struct plugin_type)
+{
   .init = init_script,
   .destroy = destroy_script,
   .call_hook = call_script_hook,
 };
 
-struct script_context 
-{
+struct script_context {
   /* The path to the script. */
   char *path;
   /* Was the script launched? */
@@ -72,9 +72,9 @@ struct script_context
   pid_t pid;
 };
 
-/* Get the dependency from the script. */ 
+/* Get the dependency from the script. */
 static bool get_dependency(const char *path, const char *dependency_name,
-    struct list *dependency_list);
+                           struct list *dependency_list);
 /* Launch the script creating a new script_context. */
 static bool launch_script(struct script_context *script);
 
@@ -165,7 +165,7 @@ static bool call_script_hook(struct plugin *s, const char *hook_name)
   length = write(context->fd, hook_name, hook_name_length);
 
   if (length > 0)
-    length += write(context->fd, &newline, sizeof newline); 
+    length += write(context->fd, &newline, sizeof newline);
 
   /* Restore the previous SIGPIPE handler. */
   (void) sigaction(SIGPIPE, &oldact, NULL);
@@ -210,7 +210,7 @@ static bool parse_dependency(char *data, struct list *dependency_list);
 
 /* Get the dependency from the script. */
 static bool get_dependency(const char *path, const char *dependency_name,
-    struct list *dependency_list)
+                           struct list *dependency_list)
 {
   /* Read the dependency data. */
   char *data;
@@ -327,8 +327,7 @@ timeout:
 
   return data;
 
-error:
-  {
+error: {
     int errsv = errno;
     free(data);
     (void) close(child.stdout_fd);
@@ -342,8 +341,8 @@ error:
 static bool parse_dependency(char *data, struct list *dependency_list)
 {
   for (char *saveptr, *token = strtok_r(data, " \r\n", &saveptr);
-      token != NULL;
-      token = strtok_r(NULL, " \r\n", &saveptr)) {
+       token != NULL;
+       token = strtok_r(NULL, " \r\n", &saveptr)) {
     char *s = strdup(token);
 
     if (s == NULL || !list_append(dependency_list, s))

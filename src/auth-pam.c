@@ -53,8 +53,8 @@
 #include "prompt.h"
 
 typedef struct vlock_pam_data_ {
-	const char *user;
-	struct timespec *timeout;
+  const char *user;
+  struct timespec *timeout;
 } vlock_pam_data;
 
 static int conversation(int num_msg, const struct pam_message **msg, struct
@@ -73,34 +73,33 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
 
   for (int i = 0; i < num_msg; i++) {
     switch (msg[i]->msg_style) {
-      case PAM_PROMPT_ECHO_OFF:
-        aresp[i].resp = prompt_echo_off(msg[i]->msg, timeout);
+    case PAM_PROMPT_ECHO_OFF:
+      aresp[i].resp = prompt_echo_off(msg[i]->msg, timeout);
+      if (aresp[i].resp == NULL)
+        goto fail;
+      break;
+    case PAM_PROMPT_ECHO_ON:
+      if (user) {
+        aresp[i].resp = user;
+        printf("%s\n",msg[i]->msg);
+      } else {
+        aresp[i].resp = prompt(msg[i]->msg, timeout);
         if (aresp[i].resp == NULL)
           goto fail;
-        break;
-      case PAM_PROMPT_ECHO_ON:
-    	if (user) {
-    		aresp[i].resp = user;
-    		printf("%s\n",msg[i]->msg);
-    	} else {
-    		aresp[i].resp = prompt(msg[i]->msg, timeout);
-    		if (aresp[i].resp == NULL)
-    		   goto fail;
-    		data->user = strdup(aresp[i].resp);
-    	}
-        printf("%s\n",aresp[i].resp);
-        break;
-      case PAM_TEXT_INFO:
-      case PAM_ERROR_MSG:
-        {
-          size_t msg_len = strlen(msg[i]->msg);
-          (void) fputs(msg[i]->msg, stderr);
-          if (msg_len > 0 && msg[i]->msg[msg_len - 1] != '\n')
-            (void) fputc('\n', stderr);
-        }
-        break;
-      default:
-        goto fail;
+        data->user = strdup(aresp[i].resp);
+      }
+      printf("%s\n",aresp[i].resp);
+      break;
+    case PAM_TEXT_INFO:
+    case PAM_ERROR_MSG: {
+      size_t msg_len = strlen(msg[i]->msg);
+      (void) fputs(msg[i]->msg, stderr);
+      if (msg_len > 0 && msg[i]->msg[msg_len - 1] != '\n')
+        (void) fputc('\n', stderr);
+    }
+    break;
+    default:
+      goto fail;
     }
   }
 
@@ -160,8 +159,8 @@ bool auth(const char *user, struct timespec *timeout)
 
   /* put the username before the password prompt */
   if (user) {
-	  fprintf(stderr, "%s's ", user);
-	  fflush(stderr);
+    fprintf(stderr, "%s's ", user);
+    fflush(stderr);
   }
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
@@ -173,7 +172,7 @@ bool auth(const char *user, struct timespec *timeout)
 
 end:
   if (!user) {
-	  free(data.user);
+    free(data.user);
   }
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);

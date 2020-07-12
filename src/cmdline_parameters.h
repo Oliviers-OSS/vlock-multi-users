@@ -36,13 +36,13 @@
 
 #define X(m)    ev_##m,
 typedef enum ModeBitValue_ {
-	MODE_TABLE
+  MODE_TABLE
 } ModeBitValue;
 #undef X
 
 #define X(m)    e_##m = 1<<ev_##m,
 typedef enum ModeValue_ {
-	MODE_TABLE
+  MODE_TABLE
 } ModeValue;
 #undef X
 
@@ -74,8 +74,8 @@ typedef enum ModeValue_ {
         O(version,v,": Print the version number of vlock and exit.",NEED_ARG)
 
 typedef struct cmndline_parameters_ {
-	unsigned int modes;
-	unsigned int timeout;
+  unsigned int modes;
+  unsigned int timeout;
 } cmndline_parameters;
 
 

@@ -78,15 +78,15 @@ void ensure_death(pid_t pid)
   int status;
 
   switch (waitpid(pid, &status, WNOHANG)) {
-    case -1:
-      /* Not your child? */
-      return;
-    case 0:
-      /* Not dead yet.  Continue. */
-      break;
-    default:
-      /* Already dead.  Nothing to do. */
-      return;
+  case -1:
+    /* Not your child? */
+    return;
+  case 0:
+    /* Not dead yet.  Continue. */
+    break;
+  default:
+    /* Already dead.  Nothing to do. */
+    return;
   }
 
   /* Send SIGTERM. */
@@ -156,7 +156,7 @@ bool create_child(struct child_process *child)
       errsv = errno;
       goto stdin_pipe_failed;
     }
-  } 
+  }
 
   if (child->stdout_fd == REDIRECT_PIPE) {
     if (pipe(stdout_pipe) < 0) {

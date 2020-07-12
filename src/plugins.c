@@ -24,7 +24,10 @@
 #include "util.h"
 
 /* the list of plugins */
-static struct list *plugins = &(struct list){ NULL, NULL };
+static struct list *plugins = &(struct list)
+{
+  NULL, NULL
+};
 
 /****************/
 /* dependencies */
@@ -84,7 +87,7 @@ bool resolve_dependencies(void)
 void unload_plugins(void)
 {
   list_delete_for_each(plugins, plugin_item)
-    destroy_plugin(plugin_item->data);
+  destroy_plugin(plugin_item->data);
 }
 
 void plugin_hook(const char *hook_name)
@@ -211,10 +214,10 @@ static bool __resolve_depedencies(void)
 
         /* Abort if dependencies not met and plugin is required. */
         if (list_find(required_plugins, p) != NULL) {
-          fprintf(stderr, 
-              "vlock-plugins: '%s' is required by some other plugin\n"
-               "              but depends on '%s' which is not loaded",
-               p->name, d);
+          fprintf(stderr,
+                  "vlock-plugins: '%s' is required by some other plugin\n"
+                  "              but depends on '%s' which is not loaded",
+                  p->name, d);
           list_free(required_plugins);
           errno = 0;
           return false;

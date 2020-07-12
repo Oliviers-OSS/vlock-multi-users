@@ -18,8 +18,7 @@
 extern const char *dependency_names[nr_dependencies];
 
 /* A plugin hook consists of a name and a handler function. */
-struct hook
-{
+struct hook {
   const char *name;
   void (*handler)(const char *);
 };
@@ -31,8 +30,7 @@ extern const struct hook hooks[nr_hooks];
 struct plugin_type;
 
 /* Struct representing a plugin instance. */
-struct plugin
-{
+struct plugin {
   /* The name of the plugin. */
   char *name;
 
@@ -54,8 +52,7 @@ struct plugin
 
 
 /* Struct representing the type of a plugin. */
-struct plugin_type
-{
+struct plugin_type {
   /* Method that is called on plugin initialization. */
   bool (*init)(struct plugin *p);
   /* Method that is called on plugin destruction.  */
@@ -70,7 +67,7 @@ extern struct plugin_type *module;
 extern struct plugin_type *script;
 
 /* Open a new plugin struct of the given type.  On error errno is set and NULL
- * is returned. */ 
+ * is returned. */
 struct plugin *new_plugin(const char *name, struct plugin_type *type);
 
 /* Destroy the given plugin.  This is the opposite of of __allocate_plugin.

@@ -38,8 +38,8 @@
 
 int vlock_debug = 0;
 static cmndline_parameters parameters = {
-		.modes = 0,
-		.timeout = TIMEOUT_NOT_SET
+  .modes = 0,
+  .timeout = TIMEOUT_NOT_SET
 };
 
 #define ensure_atexit(func) \
@@ -81,69 +81,70 @@ int log_session_access(const char *newuser,bool success)
 
   /* Get the user name from the environment if started as root. */
   if (uid == 0)
-	username = getenv("USER");
+    username = getenv("USER");
 
   if (username == NULL) {
-	struct passwd *pw;
+    struct passwd *pw;
 
-	/* Get the password entry. */
-	pw = getpwuid(uid);
+    /* Get the password entry. */
+    pw = getpwuid(uid);
 
-	if (pw != NULL) {
-		username = pw->pw_name;
-	} else {
-		error = ENOENT;
-		sprintf(buffer,"(%u)",uid);
-		username = buffer;
-	}
+    if (pw != NULL) {
+      username = pw->pw_name;
+    } else {
+      error = ENOENT;
+      sprintf(buffer,"(%u)",uid);
+      username = buffer;
+    }
   }
 
   if (success) {
-	  if (!newuser) {
-		  newuser = "???";
-	  }
-	  syslog(LOG_NOTICE,"user %s entering into %s's session",newuser,username);
+    if (!newuser) {
+      newuser = "???";
+    }
+    syslog(LOG_NOTICE,"user %s entering into %s's session",newuser,username);
   } else {
-	  syslog(LOG_ERR,"user %s authentication has failed",username);
+    syslog(LOG_ERR,"user %s authentication has failed",username);
   }
 
   return error;
 }
 
-static inline void log_session_lock() {
-	  uid_t uid = getuid();
-	  char *username = NULL;
-	  char buffer[16];
+static inline void log_session_lock()
+{
+  uid_t uid = getuid();
+  char *username = NULL;
+  char buffer[16];
 
-	  /* Get the user name from the environment if started as root. */
-	  if (uid == 0)
-		username = getenv("USER");
+  /* Get the user name from the environment if started as root. */
+  if (uid == 0)
+    username = getenv("USER");
 
-	  if (username == NULL) {
-		struct passwd *pw;
+  if (username == NULL) {
+    struct passwd *pw;
 
-		/* Get the password entry. */
-		pw = getpwuid(uid);
+    /* Get the password entry. */
+    pw = getpwuid(uid);
 
-		if (pw != NULL) {
-			username = pw->pw_name;
-		} else {
-			sprintf(buffer,"(%u)",uid);
-			username = buffer;
-		}
-	  }
+    if (pw != NULL) {
+      username = pw->pw_name;
+    } else {
+      sprintf(buffer,"(%u)",uid);
+      username = buffer;
+    }
+  }
 
-	const char *mode = "mono-user";
+  const char *mode = "mono-user";
 #ifdef NO_ROOT_PASS
-	const char *root_mode = "";
+  const char *root_mode = "";
 #else /* NO_ROOT_PASS */
-	const char *root_mode = ",root";
+  const char *root_mode = ",root";
 #endif /* NO_ROOT_PASS */
 
-	if ((parameters.modes & e_MultiUsers) == e_MultiUsers) {
-		mode = "multi-users";
-	}
-	syslog(LOG_NOTICE,"User %s's session is now locked (%s%s)",username,mode,root_mode);
+  if ((parameters.modes & e_MultiUsers) == e_MultiUsers) {
+    mode = "multi-users";
+  }
+  syslog(LOG_NOTICE,"User %s's session is now locked (%s%s)",username,mode,root_mode);
 }
 
 static void terminate(int signum)
@@ -224,8 +225,8 @@ static void auth_loop(const char *username)
     /* Print vlock message if there is one. */
     if (vlock_message && *vlock_message) {
       if ((parameters.modes & e_KeepScreen) != e_KeepScreen) {
-    	  const char *cls = "\033[H\033[J";
-    	  fputs(cls, stderr);
+        const char *cls = "\033[H\033[J";
+        fputs(cls, stderr);
       }
       fprintf(stderr,"%s\n",vlock_message);
     }
@@ -279,9 +280,10 @@ void display_auth_tries(void)
     fprintf(stderr, "%d failed authentication %s.\n", auth_tries, auth_tries > 1 ? "tries" : "try");
 }
 
-void log_program_end(void) {
-	syslog(LOG_NOTICE,"vlock ended");
-	closelog();
+void log_program_end(void)
+{
+  syslog(LOG_NOTICE,"vlock ended");
+  closelog();
 }
 
 #ifdef USE_PLUGINS
@@ -294,21 +296,20 @@ static void call_end_hook(void)
 
 static inline void printVersion(void)
 {
-        //printf(PACKAGE_STRING EOL);
+  //printf(PACKAGE_STRING EOL);
 }
 
-static const struct option longopts[] =
-{
+static const struct option longopts[] = {
 #define NEED_ARG        required_argument
 #define NO_ARG          no_argument
 #define OPT_ARG         optional_argument
 #define X(l,s,t,o)      { TO_STRING(l),o,NULL,TO_STRING(s)[0] },
-                CMDLINE_OPTS_TABLE
+  CMDLINE_OPTS_TABLE
 #undef X
 #undef NEED_ARG
 #undef NO_ARG
 #undef OPT_ARG
-                { NULL, 0, NULL, 0 }
+  { NULL, 0, NULL, 0 }
 };
 
 static inline void printHelp(const char *errorMsg)
@@ -317,11 +318,11 @@ static inline void printHelp(const char *errorMsg)
 
 #define USAGE "Usage: " TO_STRING(PROGNAME) " [OPTIONS]" EOL
 
-   if (errorMsg != NULL) {
-      fprintf(stderr, "Error %s" EOL USAGE CMDLINE_OPTS_TABLE, errorMsg);
-   } else {
-      fprintf(stdout, USAGE CMDLINE_OPTS_TABLE);
-   }
+  if (errorMsg != NULL) {
+    fprintf(stderr, "Error %s" EOL USAGE CMDLINE_OPTS_TABLE, errorMsg);
+  } else {
+    fprintf(stdout, USAGE CMDLINE_OPTS_TABLE);
+  }
 #undef X
 #undef USAGE
 }
@@ -333,70 +334,70 @@ static int parse_cmdLine(int argc,char *const argv[])
 #define OPT_ARG         "::"
 #define X(l,s,t,o) TO_STRING(s) o
 
-   int error = EXIT_SUCCESS;
-   int optc;
+  int error = EXIT_SUCCESS;
+  int optc;
 
-      while (((optc = getopt_long(argc, argv, CMDLINE_OPTS_TABLE, longopts, NULL)) != -1)
-            && (EXIT_SUCCESS == error)) {
-         switch (optc) {
-            case 'c':
-               parameters.modes &= ~e_All;
-               break;
-            case 'a':
-               parameters.modes |= e_All;
-               break;
-            case 'u':
-               parameters.modes |= e_MultiUsers;
-               break;
-            case 'k':
-              parameters.modes |= e_KeepScreen;
-              break;
+  while (((optc = getopt_long(argc, argv, CMDLINE_OPTS_TABLE, longopts, NULL)) != -1)
+         && (EXIT_SUCCESS == error)) {
+    switch (optc) {
+    case 'c':
+      parameters.modes &= ~e_All;
+      break;
+    case 'a':
+      parameters.modes |= e_All;
+      break;
+    case 'u':
+      parameters.modes |= e_MultiUsers;
+      break;
+    case 'k':
+      parameters.modes |= e_KeepScreen;
+      break;
 #ifdef USE_PLUGINS
-		   case 'n':
-			  parameters.modes |= e_NewVirtualConsole;
-			  break;
-		   case 's':
-			  parameters.modes |= e_SysReq;
-			  break;
+    case 'n':
+      parameters.modes |= e_NewVirtualConsole;
+      break;
+    case 's':
+      parameters.modes |= e_SysReq;
+      break;
 #endif /* USE_PLUGINS */
-           case 'h':
-              printHelp(NULL);
-              exit(EXIT_SUCCESS);
-              break;
-		   case 'v':
-              printVersion();
-              exit(EXIT_SUCCESS);
-              break;
-		   case '?':
-              error = EINVAL;
-              printHelp("");
-              break;
-           default:
-              error = EINVAL;
-              printHelp("invalid parameter");
-              break;
-         } /* switch */
-      } /*while(((optc = getopt_long(argc,argv,"cln:phv",longopts,NULL))!= -1) && (EXIT_SUCCESS == error))*/
+    case 'h':
+      printHelp(NULL);
+      exit(EXIT_SUCCESS);
+      break;
+    case 'v':
+      printVersion();
+      exit(EXIT_SUCCESS);
+      break;
+    case '?':
+      error = EINVAL;
+      printHelp("");
+      break;
+    default:
+      error = EINVAL;
+      printHelp("invalid parameter");
+      break;
+    } /* switch */
+  } /*while(((optc = getopt_long(argc,argv,"cln:phv",longopts,NULL))!= -1) && (EXIT_SUCCESS == error))*/
 #undef X
 #undef NEED_ARG
 #undef NO_ARG
 #undef OPT_ARG
-      return error;
+  return error;
 }
 
 /* Lock the current terminal until proper authentication is received. */
 int main(int argc, char *const argv[])
 {
-	int error = EXIT_SUCCESS;
+  int error = EXIT_SUCCESS;
   char *username = NULL;
 
   vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
 
   error = parse_cmdLine(argc,argv);
   if (error != EXIT_SUCCESS) {
-	  errno = error;
-	  perror("vlock: invalid arguments\n");
-	  exit(EXIT_FAILURE);
+    errno = error;
+    perror("vlock: invalid arguments\n");
+    exit(EXIT_FAILURE);
   }
 
   openlog("vlock",LOG_CONS|LOG_PID,LOG_AUTH);
@@ -404,9 +405,9 @@ int main(int argc, char *const argv[])
   block_signals();
 
   if ((parameters.modes & e_MultiUsers) != e_MultiUsers) {
-	  username = get_username();
-	  if (username == NULL)
-	      fatal_perror("vlock: could not get username");
+    username = get_username();
+    if (username == NULL)
+      fatal_perror("vlock: could not get username");
   }
 
   ensure_atexit(log_program_end);
@@ -414,10 +415,10 @@ int main(int argc, char *const argv[])
 
 #ifdef USE_PLUGINS
   for (int i = 1; i < argc; i++) {
-	  if (argv[i][0] != '-') {
-	  		if (!load_plugin(argv[i]))
-	  		      fatal_error("vlock: loading plugin '%s' failed: %s", argv[i], STRERROR);
-	  	}
+    if (argv[i][0] != '-') {
+      if (!load_plugin(argv[i]))
+        fatal_error("vlock: loading plugin '%s' failed: %s", argv[i], STRERROR);
+    }
   }
 
   ensure_atexit(unload_plugins);

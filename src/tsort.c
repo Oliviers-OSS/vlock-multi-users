@@ -115,8 +115,7 @@ struct list *tsort(struct list *nodes, struct list *edges)
 
   return sorted_nodes;;
 
-error:
-  {
+error: {
     int errsv = errno;
     list_free(sorted_nodes);
     list_free(zeros);

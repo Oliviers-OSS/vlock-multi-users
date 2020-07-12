@@ -15,16 +15,14 @@
 #include <stddef.h>
 
 /* Single list item. */
-struct list_item
-{
+struct list_item {
   void *data;
   struct list_item *next;
   struct list_item *previous;
 };
 
 /* Whole list. */
-struct list
-{
+struct list {
   struct list_item *first;
   struct list_item *last;
 };

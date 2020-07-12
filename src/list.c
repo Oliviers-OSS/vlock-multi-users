@@ -40,10 +40,10 @@ struct list *list_copy(struct list *l)
     return NULL;
 
   list_for_each(l, item)
-    if (!list_append(new_list, item->data)) {
-      list_free(new_list);
-      return NULL;
-    }
+  if (!list_append(new_list, item->data)) {
+    list_free(new_list);
+    return NULL;
+  }
 
   return new_list;
 }
@@ -66,7 +66,7 @@ size_t list_length(struct list *l)
   size_t length = 0;
 
   list_for_each(l, item)
-    length++;
+  length++;
 
   return length;
 }
@@ -133,8 +133,8 @@ void list_delete(struct list *l, void *data)
 struct list_item *list_find(struct list *l, void *data)
 {
   list_for_each(l, item)
-    if (item->data == data)
-      return item;
+  if (item->data == data)
+    return item;
 
   return NULL;
 }

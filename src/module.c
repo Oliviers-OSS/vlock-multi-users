@@ -37,7 +37,8 @@ static bool init_module(struct plugin *p);
 static void destroy_module(struct plugin *p);
 static bool call_module_hook(struct plugin *p, const char *hook_name);
 
-struct plugin_type *module = &(struct plugin_type){
+struct plugin_type *module = &(struct plugin_type)
+{
   .init = init_module,
   .destroy = destroy_module,
   .call_hook = call_module_hook,
@@ -46,8 +47,7 @@ struct plugin_type *module = &(struct plugin_type){
 /* A hook function as defined by a module. */
 typedef bool (*module_hook_function)(void **);
 
-struct module_context
-{
+struct module_context {
   /* Handle returned by dlopen(). */
   void *dl_handle;
   /* Pointer to be used by the modules. */
