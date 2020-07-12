@@ -202,7 +202,6 @@ static void auth_loop(const char *username)
 
   /* Get the vlock message from the environment. */
   vlock_message = getenv("VLOCK_MESSAGE");
-
   if (vlock_message == NULL) {
     if (console_switch_locked)
       vlock_message = getenv("VLOCK_ALL_MESSAGE");
@@ -224,8 +223,11 @@ static void auth_loop(const char *username)
 
     /* Print vlock message if there is one. */
     if (vlock_message && *vlock_message) {
-      fputs(vlock_message, stderr);
-      fputc('\n', stderr);
+      if ((parameters.modes & e_KeepScreen) != e_KeepScreen) {
+    	  const char *cls = "\033[H\033[J";
+    	  fputs(cls, stderr);
+      }
+      fprintf(stderr,"%s\n",vlock_message);
     }
 
     /* Wait for enter or escape to be pressed. */
@@ -346,6 +348,9 @@ static int parse_cmdLine(int argc,char *const argv[])
             case 'u':
                parameters.modes |= e_MultiUsers;
                break;
+            case 'k':
+              parameters.modes |= e_KeepScreen;
+              break;
 #ifdef USE_PLUGINS
 		   case 'n':
 			  parameters.modes |= e_NewVirtualConsole;

@@ -29,17 +29,25 @@ CLEAR_SCREEN="`echo -e '\033[H\033[J'`"
 VLOCK_ENTER_PROMPT="Please press [ENTER] to unlock."
 
 # Message that is displayed when console switching is disabled.
-VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
-The entire console display is now completely locked.
+#VLOCK_ALL_MESSAGE="${CLEAR_SCREEN}\
+#The entire console display is now completely locked.
+#You will not be able to switch to another virtual console.
+#
+#${VLOCK_ENTER_PROMPT}"
+VLOCK_ALL_MESSAGE="The entire console display is now completely locked.
 You will not be able to switch to another virtual console.
 
 ${VLOCK_ENTER_PROMPT}"
 
 # Message that is displayed when only the current terminal is locked.
-VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
-This TTY is now locked.
+#VLOCK_CURRENT_MESSAGE="${CLEAR_SCREEN}\
+#This TTY is now locked.
+#
+#${VLOCK_ENTER_PROMPT}"
+VLOCK_CURRENT_MESSAGE="This TTY is now locked.
 
 ${VLOCK_ENTER_PROMPT}"
+
 
 # Read user settings.
 if [ -r "${HOME}/.vlockrc" ] ; then
@@ -66,6 +74,7 @@ print_help() {
   echo >&2 "       from switching virtual consoles."
   echo >&2 "-u or --multi-users: ask user name before password to allow unlock"
   echo >&2 "       accountability on a generic user session"
+  echo >&2 "-k or --keep-screen: :don't clear the screen at startup"
   if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
     echo >&2 "-n or --new: allocate a new virtual console before locking,"
     echo >&2 "       implies --all."
@@ -177,6 +186,10 @@ main() {
         multiusermode="-u"
         shift
         ;;
+      -k|--keep-screen)
+        keepscreen="-k"
+        shift
+        ;;  
       -n|--new)
         plugins="${plugins} new"
         shift
@@ -238,9 +251,9 @@ main() {
   export_if_set VLOCK_MESSAGE VLOCK_ALL_MESSAGE VLOCK_CURRENT_MESSAGE
 
   if [ "${VLOCK_ENABLE_PLUGINS}" = "yes" ] ; then
-    exec "${VLOCK_MAIN}" ${multiusermode} ${plugins} ${VLOCK_PLUGINS} "$@"
+    exec "${VLOCK_MAIN}" ${multiusermode} ${keepscreen} ${plugins} ${VLOCK_PLUGINS} "$@"
   else
-    exec "${VLOCK_MAIN}" ${multiusermode} ${plugins}
+    exec "${VLOCK_MAIN}" ${multiusermode} ${keepscreen} ${plugins}
   fi
 }
 

@@ -31,7 +31,8 @@
 		MODE(All) \
 		MODE(MultiUsers) \
 		MODE(NewVirtualConsole) \
-		MODE(SysReq)
+		MODE(SysReq) \
+		MODE(KeepScreen)
 
 #define X(m)    ev_##m,
 typedef enum ModeBitValue_ {
@@ -53,7 +54,8 @@ typedef enum ModeValue_ {
 #define CMDLINE_CMN_OPTS_TABLE \
                 O(current,c," :lock only this virtual console, allowing user to" EOL NLT "switch to other virtual consoles.",NO_ARG) \
                 O(all,a," :lock all virtual consoles by preventing other users" EOL NLT "from switching virtual consoles.",NO_ARG) \
-                O(multi-user,u," :ask user name before password to allow unlock" EOL NLT "accountability on a generic user session",NO_ARG)
+                O(multi-user,u," :ask user name before password to allow unlock" EOL NLT "accountability on a generic user session",NO_ARG) \
+                O(keep-screen,k," :don't clear the screen at startup",NO_ARG)
 
 
 #ifdef USE_PLUGINS
