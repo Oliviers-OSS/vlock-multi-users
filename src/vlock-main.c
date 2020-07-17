@@ -257,7 +257,7 @@ static void auth_loop(const char *username)
       sleep(1);
 
 #ifndef NO_ROOT_PASS
-    if (strcmp(username, "root") != 0) {
+    if ((username == NULL ) || (strcmp(username, "root") != 0)) {
       /* Try authentication as root. */
       if (auth("root", prompt_timeout))
         break;

@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include <security/pam_appl.h>
 
@@ -60,7 +61,7 @@ typedef struct vlock_pam_data_ {
 static int conversation(int num_msg, const struct pam_message **msg, struct
                         pam_response **resp, void *appdata_ptr)
 {
-  struct pam_response *aresp;
+  struct pam_response *aresp = NULL;
   vlock_pam_data *data = (vlock_pam_data *)appdata_ptr;
   struct timespec *timeout = data->timeout;
   const char *user = data->user;
@@ -87,6 +88,7 @@ static int conversation(int num_msg, const struct pam_message **msg, struct
         if (aresp[i].resp == NULL)
           goto fail;
         data->user = strdup(aresp[i].resp);
+        syslog(LOG_NOTICE,"user %s is trying to unlock the session",data->user);
       }
       printf("%s\n",aresp[i].resp);
       break;
@@ -140,7 +142,7 @@ bool auth(const char *user, struct timespec *timeout)
   pam_status = pam_start("vlock", user, &pamc, &pamh);
 
   if (pam_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+    syslog(LOG_ERR, "pam_start error %s\n", pam_strerror(pamh, pam_status));
     goto end;
   }
 
@@ -152,7 +154,7 @@ bool auth(const char *user, struct timespec *timeout)
     pam_status = pam_set_item(pamh, PAM_TTY, pam_tty);
 
     if (pam_status != PAM_SUCCESS) {
-      fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
+      syslog(LOG_ERR, "pam_set_item error %s\n", pam_strerror(pamh, pam_status));
       goto end;
     }
   }
@@ -165,6 +167,25 @@ bool auth(const char *user, struct timespec *timeout)
   /* authenticate the user */
   pam_status = pam_authenticate(pamh, 0);
 
+  if (PAM_SUCCESS == pam_status) {
+    pam_status = pam_acct_mgmt(pamh, PAM_SILENT);
+    switch(pam_status) {
+    case PAM_SUCCESS:
+      break;
+    case PAM_USER_UNKNOWN:
+    case PAM_ACCT_EXPIRED:
+      syslog(LOG_ERR, "user %s account check error %s",data.user,pam_strerror(pamh, pam_status));
+      break;
+    case PAM_NEW_AUTHTOK_REQD:
+      do {
+        pam_status = pam_chauthtok(pamh, 0);
+      } while(PAM_AUTHTOK_ERR == pam_status);
+      if (pam_status != PAM_SUCCESS) {
+        syslog(LOG_ERR, "user %s password expired then error %s",data.user,pam_strerror(pamh, pam_status));
+      }
+    }
+  }
+
   log_session_access(data.user,(PAM_SUCCESS == pam_status));
   if (pam_status != PAM_SUCCESS) {
     fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_status));
@@ -172,13 +193,13 @@ bool auth(const char *user, struct timespec *timeout)
 
 end:
   if (!user) {
-    free(data.user);
+    free((void*)data.user);
   }
   /* finish pam */
   pam_end_status = pam_end(pamh, pam_status);
 
   if (pam_end_status != PAM_SUCCESS) {
-    fprintf(stderr, "vlock: %s\n", pam_strerror(pamh, pam_end_status));
+    syslog(LOG_ERR, "pam_end error %s\n", pam_strerror(pamh, pam_end_status));
   }
 
   return (pam_status == PAM_SUCCESS);
