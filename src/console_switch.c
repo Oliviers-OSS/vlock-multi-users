@@ -23,6 +23,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <signal.h>
+#include <syslog.h>
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
@@ -68,9 +69,11 @@ bool lock_console_switch(void)
   /* Get the virtual console mode. */
   if (ioctl(STDIN_FILENO, VT_GETMODE, &vtm) < 0) {
     if (errno == ENOTTY || errno == EINVAL)
-      fprintf(stderr, "vlock: this terminal is not a virtual console\n");
-    else
+      syslog(LOG_ERR, "vlock: this terminal is not a virtual console\n");
+    else {
       perror("vlock: could not get virtual console mode");
+      syslog(LOG_ERR,"could not get virtual console mode");
+    }
 
     errno = 0;
     return false;
@@ -100,6 +103,7 @@ bool lock_console_switch(void)
    * switching through the signal handlers above. */
   if (ioctl(STDIN_FILENO, VT_SETMODE, &lock_vtm) < 0) {
     perror("vlock: disabling console switching failed");
+    syslog(LOG_ERR,"disabling console switching failed");
 
     /* Reset signal handlers. */
     (void) sigaction(SIGUSR1, &sa_usr1, NULL);
@@ -123,6 +127,7 @@ bool unlock_console_switch(void)
     return true;
   } else {
     perror("vlock: reenabling console switch failed");
+    syslog(LOG_ERR,"reenabling console switch failed");
     errno = 0;
     return false;
   }

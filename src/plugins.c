@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <syslog.h>
 
 #include "plugins.h"
 
@@ -23,10 +24,12 @@
 #include "plugin.h"
 #include "util.h"
 
+#define DEBUG_MARK            syslog(LOG_DEBUG,"(%d) in %s" "\n",__LINE__,__PRETTY_FUNCTION__)
+
 /* the list of plugins */
 static struct list *plugins = &(struct list)
 {
-  NULL, NULL
+	NULL, NULL
 };
 
 /****************/
@@ -41,12 +44,12 @@ static struct list *plugins = &(struct list)
 #define CONFLICTS 5
 
 const char *dependency_names[nr_dependencies] = {
-  "succeeds",
-  "preceeds",
-  "requires",
-  "needs",
-  "depends",
-  "conflicts",
+		"succeeds",
+		"preceeds",
+		"requires",
+		"needs",
+		"depends",
+		"conflicts",
 };
 
 /*********/
@@ -59,10 +62,10 @@ static void handle_vlock_save(const char * hook_name);
 static void handle_vlock_save_abort(const char * hook_name);
 
 const struct hook hooks[nr_hooks] = {
-  { "vlock_start", handle_vlock_start },
-  { "vlock_end", handle_vlock_end },
-  { "vlock_save", handle_vlock_save },
-  { "vlock_save_abort", handle_vlock_save_abort },
+		{ "vlock_start", handle_vlock_start },
+		{ "vlock_end", handle_vlock_end },
+		{ "vlock_save", handle_vlock_save },
+		{ "vlock_save_abort", handle_vlock_save_abort },
 };
 
 /**********************/
@@ -76,28 +79,30 @@ static bool sort_plugins(void);
 
 bool load_plugin(const char *name)
 {
-  return __load_plugin(name) != NULL;
+	return __load_plugin(name) != NULL;
 }
 
 bool resolve_dependencies(void)
 {
-  return __resolve_depedencies() && sort_plugins();
+	return __resolve_depedencies() && sort_plugins();
 }
 
 void unload_plugins(void)
 {
-  list_delete_for_each(plugins, plugin_item)
-  destroy_plugin(plugin_item->data);
+	list_delete_for_each(plugins, plugin_item)
+		  destroy_plugin(plugin_item->data);
 }
 
 void plugin_hook(const char *hook_name)
 {
-  for (size_t i = 0; i < nr_hooks; i++)
-    /* Get the handler and call it. */
-    if (strcmp(hook_name, hooks[i].name) == 0) {
-      hooks[i].handler(hook_name);
-      break;
-    }
+	for (size_t i = 0; i < nr_hooks; i++) {
+		/* Get the handler and call it. */
+		if (strcmp(hook_name, hooks[i].name) == 0) {
+			syslog(LOG_DEBUG,"calling handler %s",hook_name);
+			hooks[i].handler(hook_name);
+			break;
+		}
+	}
 }
 
 /********************/
@@ -106,152 +111,151 @@ void plugin_hook(const char *hook_name)
 
 static struct plugin *get_plugin(const char *name)
 {
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
-    if (strcmp(name, p->name) == 0)
-      return p;
-  }
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
+		if (strcmp(name, p->name) == 0)
+			return p;
+	}
 
-  return NULL;
+	return NULL;
 }
 
 /* Load and return the named plugin. */
 static struct plugin *__load_plugin(const char *name)
 {
-  struct plugin *p = get_plugin(name);
+	struct plugin *p = get_plugin(name);
 
-  if (p != NULL)
-    return p;
+	if (p != NULL)
+		return p;
 
-  /* Try to open a module first. */
-  p = new_plugin(name, module);
+	/* Try to open a module first. */
+	p = new_plugin(name, module);
 
-  if (p != NULL)
-    goto success;
+	if (p != NULL)
+		goto success;
 
-  if (errno != ENOENT)
-    return NULL;
+	if (errno != ENOENT)
+		return NULL;
 
-  /* Now try to open a script. */
-  p = new_plugin(name, script);
+	/* Now try to open a script. */
+	p = new_plugin(name, script);
 
-  if (p == NULL)
-    return NULL;
+	if (p == NULL)
+		return NULL;
 
-success:
-  if (!list_append(plugins, p)) {
-    GUARD_ERRNO(destroy_plugin(p));
-    return NULL;
-  }
+	success:
+	if (!list_append(plugins, p)) {
+		GUARD_ERRNO(destroy_plugin(p));
+		return NULL;
+	}
 
-  return p;
+	return p;
 }
 
 /* Resolve the dependencies of the plugins. */
 static bool __resolve_depedencies(void)
 {
-  struct list *required_plugins = list_new();
+	struct list *required_plugins = list_new();
 
-  /* Load plugins that are required.  This automagically takes care of plugins
-   * that are required by the plugins loaded here because they are appended to
-   * the end of the list. */
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	/* Load plugins that are required.  This automagically takes care of plugins
+	 * that are required by the plugins loaded here because they are appended to
+	 * the end of the list. */
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    list_for_each(p->dependencies[REQUIRES], dependency_item) {
-      const char *d = dependency_item->data;
-      struct plugin *q = __load_plugin(d);
+		list_for_each(p->dependencies[REQUIRES], dependency_item) {
+			const char *d = dependency_item->data;
+			struct plugin *q = __load_plugin(d);
 
-      if (q == NULL) {
-        int errsv = errno;
-        fprintf(stderr, "vlock-plugins: '%s' requires '%s' which could not be loaded\n", p->name, d);
-        list_free(required_plugins);
-        errno = errsv;
-        return false;
-      }
+			if (q == NULL) {
+				int errsv = errno;
+				syslog(LOG_ERR,"vlock-plugins: '%s' requires '%s' which could not be loaded\n", p->name, d);
+				list_free(required_plugins);
+				errno = errsv;
+				return false;
+			}
 
-      if (!list_append(required_plugins, q)) {
-        GUARD_ERRNO(list_free(required_plugins));
-        return false;
-      }
-    }
-  }
+			if (!list_append(required_plugins, q)) {
+				GUARD_ERRNO(list_free(required_plugins));
+				return false;
+			}
+		}
+	}
 
-  /* Fail if a plugins that is needed is not loaded. */
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	/* Fail if a plugins that is needed is not loaded. */
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    list_for_each(p->dependencies[NEEDS], dependency_item) {
-      const char *d = dependency_item->data;
-      struct plugin *q = get_plugin(d);
+		list_for_each(p->dependencies[NEEDS], dependency_item) {
+			const char *d = dependency_item->data;
+			struct plugin *q = get_plugin(d);
 
-      if (q == NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' needs '%s' which is not loaded\n", p->name, d);
-        list_free(required_plugins);
-        errno = 0;
-        return false;
-      }
+			if (q == NULL) {
+				syslog(LOG_ERR,"vlock-plugins: '%s' needs '%s' which is not loaded\n", p->name, d);
+				list_free(required_plugins);
+				errno = 0;
+				return false;
+			}
 
-      if (!list_append(required_plugins, q)) {
-        GUARD_ERRNO(list_free(required_plugins));
-        return false;
-      }
-    }
-  }
+			if (!list_append(required_plugins, q)) {
+				GUARD_ERRNO(list_free(required_plugins));
+				return false;
+			}
+		}
+	}
 
-  /* Unload plugins whose prerequisites are not present, fail if those plugins
-   * are required. */
-  list_for_each_manual(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
-    bool dependencies_loaded = true;
+	/* Unload plugins whose prerequisites are not present, fail if those plugins
+	 * are required. */
+	list_for_each_manual(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
+		bool dependencies_loaded = true;
 
-    list_for_each(p->dependencies[DEPENDS], dependency_item) {
-      const char *d = dependency_item->data;
-      struct plugin *q = get_plugin(d);
+		list_for_each(p->dependencies[DEPENDS], dependency_item) {
+			const char *d = dependency_item->data;
+			struct plugin *q = get_plugin(d);
 
-      if (q == NULL) {
-        dependencies_loaded = false;
+			if (q == NULL) {
+				dependencies_loaded = false;
 
-        /* Abort if dependencies not met and plugin is required. */
-        if (list_find(required_plugins, p) != NULL) {
-          fprintf(stderr,
-                  "vlock-plugins: '%s' is required by some other plugin\n"
-                  "              but depends on '%s' which is not loaded",
-                  p->name, d);
-          list_free(required_plugins);
-          errno = 0;
-          return false;
-        }
+				/* Abort if dependencies not met and plugin is required. */
+				if (list_find(required_plugins, p) != NULL) {
+					syslog(LOG_ERR,"vlock-plugins: '%s' is required by some other plugin\n"
+							"              but depends on '%s' which is not loaded",
+							p->name, d);
+					list_free(required_plugins);
+					errno = 0;
+					return false;
+				}
 
-        break;
-      }
-    }
+				break;
+			}
+		}
 
-    if (dependencies_loaded) {
-      plugin_item = plugin_item->next;
-    } else {
-      plugin_item = list_delete_item(plugins, plugin_item);
-      destroy_plugin(p);
-    }
-  }
+		if (dependencies_loaded) {
+			plugin_item = plugin_item->next;
+		} else {
+			plugin_item = list_delete_item(plugins, plugin_item);
+			destroy_plugin(p);
+		}
+	}
 
-  list_free(required_plugins);
+	list_free(required_plugins);
 
-  /* Fail if conflicting plugins are loaded. */
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	/* Fail if conflicting plugins are loaded. */
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    list_for_each(p->dependencies[CONFLICTS], dependency_item) {
-      const char *d = dependency_item->data;
-      if (get_plugin(d) != NULL) {
-        fprintf(stderr, "vlock-plugins: '%s' and '%s' cannot be loaded at the same time\n", p->name, d);
-        errno = 0;
-        return false;
-      }
-    }
-  }
+		list_for_each(p->dependencies[CONFLICTS], dependency_item) {
+			const char *d = dependency_item->data;
+			if (get_plugin(d) != NULL) {
+				syslog(LOG_ERR,"vlock-plugins: '%s' and '%s' cannot be loaded at the same time\n", p->name, d);
+				errno = 0;
+				return false;
+			}
+		}
+	}
 
-  return true;
+	return true;
 }
 
 static struct list *get_edges(void);
@@ -260,101 +264,101 @@ static struct list *get_edges(void);
  * dependencies.  Fails if sorting is not possible because of circles. */
 static bool sort_plugins(void)
 {
-  struct list *edges = get_edges();
-  struct list *sorted_plugins;
+	struct list *edges = get_edges();
+	struct list *sorted_plugins;
 
-  if (edges == NULL)
-    return false;
+	if (edges == NULL)
+		return false;
 
-  /* Topological sort. */
-  sorted_plugins = tsort(plugins, edges);
+	/* Topological sort. */
+	sorted_plugins = tsort(plugins, edges);
 
-  if (sorted_plugins == NULL && errno != 0)
-    return false;
+	if (sorted_plugins == NULL && errno != 0)
+		return false;
 
-  list_delete_for_each(edges, edge_item) {
-    struct edge *e = edge_item->data;
-    struct plugin *p = e->predecessor;
-    struct plugin *s = e->successor;
+	list_delete_for_each(edges, edge_item) {
+		struct edge *e = edge_item->data;
+		struct plugin *p = e->predecessor;
+		struct plugin *s = e->successor;
 
-    fprintf(stderr, "\t%s\tmust come before\t%s\n", p->name, s->name);
-    free(e);
-  }
+		syslog(LOG_ERR,"\t%s\tmust come before\t%s\n", p->name, s->name);
+		free(e);
+	}
 
-  if (sorted_plugins != NULL) {
-    /* Switch the global list of plugins for the sorted list.  The global list
-     * is static and cannot be freed. */
-    struct list_item *first = sorted_plugins->first;
-    struct list_item *last = sorted_plugins->last;
+	if (sorted_plugins != NULL) {
+		/* Switch the global list of plugins for the sorted list.  The global list
+		 * is static and cannot be freed. */
+		struct list_item *first = sorted_plugins->first;
+		struct list_item *last = sorted_plugins->last;
 
-    sorted_plugins->first = plugins->first;
-    sorted_plugins->last = plugins->last;
+		sorted_plugins->first = plugins->first;
+		sorted_plugins->last = plugins->last;
 
-    plugins->first = first;
-    plugins->last = last;
+		plugins->first = first;
+		plugins->last = last;
 
-    list_free(sorted_plugins);
+		list_free(sorted_plugins);
 
-    return true;
-  } else {
-    fprintf(stderr, "vlock-plugins: circular dependencies detected\n");
-    return false;
-  }
+		return true;
+	} else {
+		syslog(LOG_ERR,"vlock-plugins: circular dependencies detected\n");
+		return false;
+	}
 }
 
 static bool append_edge(struct list *edges, struct plugin *p, struct plugin *s)
 {
-  struct edge *e = malloc(sizeof *e);
+	struct edge *e = malloc(sizeof *e);
 
-  if (e == NULL)
-    return false;
+	if (e == NULL)
+		return false;
 
-  e->predecessor = p;
-  e->successor = s;
+	e->predecessor = p;
+	e->successor = s;
 
-  if (!list_append(edges, e)) {
-    GUARD_ERRNO(free(e));
-    return false;
-  }
+	if (!list_append(edges, e)) {
+		GUARD_ERRNO(free(e));
+		return false;
+	}
 
-  return true;
+	return true;
 }
 
 /* Get the edges of the plugin graph specified by each plugin's "preceeds" and
  * "succeeds" dependencies. */
 static struct list *get_edges(void)
 {
-  struct list *edges = list_new();
+	struct list *edges = list_new();
 
-  if (edges == NULL)
-    return NULL;
+	if (edges == NULL)
+		return NULL;
 
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
-    /* p must come after these */
-    list_for_each(p->dependencies[SUCCEEDS], predecessor_item) {
-      struct plugin *q = get_plugin(predecessor_item->data);
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
+		/* p must come after these */
+		list_for_each(p->dependencies[SUCCEEDS], predecessor_item) {
+			struct plugin *q = get_plugin(predecessor_item->data);
 
-      if (q != NULL)
-        if (!append_edge(edges, q, p))
-          goto error;
-    }
+			if (q != NULL)
+				if (!append_edge(edges, q, p))
+					goto error;
+		}
 
-    /* p must come before these */
-    list_for_each(p->dependencies[PRECEEDS], successor_item) {
-      struct plugin *q = get_plugin(successor_item->data);
+		/* p must come before these */
+		list_for_each(p->dependencies[PRECEEDS], successor_item) {
+			struct plugin *q = get_plugin(successor_item->data);
 
-      if (q != NULL)
-        if (!append_edge(edges, p, q))
-          goto error;
-    }
-  }
+			if (q != NULL)
+				if (!append_edge(edges, p, q))
+					goto error;
+		}
+	}
 
-  return edges;
+	return edges;
 
-error:
-  GUARD_ERRNO(list_free(edges));
-  return NULL;
+	error:
+	GUARD_ERRNO(list_free(edges));
+	return NULL;
 }
 
 /************/
@@ -366,32 +370,31 @@ error:
  * called before are called in reverse order. */
 void handle_vlock_start(const char *hook_name)
 {
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    if (!call_hook(p, hook_name)) {
-      int errsv = errno;
+		if (!call_hook(p, hook_name)) {
+			int errsv = errno;
 
-      list_for_each_reverse_from(plugins, reverse_item, plugin_item->previous) {
-        struct plugin *r = reverse_item->data;
-        (void) call_hook(r, "vlock_end");
-      }
+			list_for_each_reverse_from(plugins, reverse_item, plugin_item->previous) {
+				struct plugin *r = reverse_item->data;
+				(void) call_hook(r, "vlock_end");
+			}
 
-      if (errsv)
-        fprintf(stderr, "vlock: plugin '%s' failed: %s\n", p->name, strerror(errsv));
+			syslog(LOG_ERR,"vlock: plugin '%s' failed, error code = %d", p->name, errsv);
 
-      exit(EXIT_FAILURE);
-    }
-  }
+			exit(EXIT_FAILURE);
+		}
+	}
 }
 
 /* Call the "vlock_end" hook of each plugin in reverse order.  Never fails. */
 void handle_vlock_end(const char *hook_name)
 {
-  list_for_each_reverse(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
-    (void) call_hook(p, hook_name);
-  }
+	list_for_each_reverse(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
+		(void) call_hook(p, hook_name);
+	}
 }
 
 /* Call the "vlock_save" hook of each plugin.  Never fails.  If the hook of a
@@ -399,17 +402,17 @@ void handle_vlock_end(const char *hook_name)
  * called again afterwards. */
 void handle_vlock_save(const char *hook_name)
 {
-  list_for_each(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	list_for_each(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    if (p->save_disabled)
-      continue;
+		if (p->save_disabled)
+			continue;
 
-    if (!call_hook(p, hook_name)) {
-      p->save_disabled = true;
-      (void) call_hook(p, "vlock_save_abort");
-    }
-  }
+		if (!call_hook(p, hook_name)) {
+			p->save_disabled = true;
+			(void) call_hook(p, "vlock_save_abort");
+		}
+	}
 }
 
 /* Call the "vlock_save" hook of each plugin.  Never fails.  If the hook of a
@@ -417,13 +420,13 @@ void handle_vlock_save(const char *hook_name)
  * again afterwards. */
 void handle_vlock_save_abort(const char *hook_name)
 {
-  list_for_each_reverse(plugins, plugin_item) {
-    struct plugin *p = plugin_item->data;
+	list_for_each_reverse(plugins, plugin_item) {
+		struct plugin *p = plugin_item->data;
 
-    if (p->save_disabled)
-      continue;
+		if (p->save_disabled)
+			continue;
 
-    if (!call_hook(p, hook_name))
-      p->save_disabled = true;
-  }
+		if (!call_hook(p, hook_name))
+			p->save_disabled = true;
+	}
 }

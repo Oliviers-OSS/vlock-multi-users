@@ -36,6 +36,8 @@
 #include "plugins.h"
 #endif
 
+#define DEBUG_MARK            syslog(LOG_DEBUG,"(%d) in %s" "\n",__LINE__,__PRETTY_FUNCTION__)
+
 int vlock_debug = 0;
 static cmndline_parameters parameters = {
   .modes = 0,
@@ -392,7 +394,6 @@ int main(int argc, char *const argv[])
   char *username = NULL;
 
   vlock_debug = (getenv("VLOCK_DEBUG") != NULL);
-
   error = parse_cmdLine(argc,argv);
   if (error != EXIT_SUCCESS) {
     errno = error;
@@ -400,7 +401,7 @@ int main(int argc, char *const argv[])
     exit(EXIT_FAILURE);
   }
 
-  openlog("vlock",LOG_CONS|LOG_PID,LOG_AUTH);
+  openlog("vlock",LOG_CONS|LOG_PID|LOG_PERROR,LOG_AUTH);
 
   block_signals();
 
@@ -432,16 +433,15 @@ int main(int argc, char *const argv[])
 
   plugin_hook("vlock_start");
   ensure_atexit(call_end_hook);
+
 #else /* !USE_PLUGINS */
   /* Emulate pseudo plugin "all". */
   if ((parameters.modes & e_All) != e_All) {
     if (!lock_console_switch()) {
       if (errno)
         perror("vlock: could not disable console switching");
-
       exit(EXIT_FAILURE);
     }
-
     ensure_atexit((void (*)(void))unlock_console_switch);
   } else if (argc > 1) {
     fatal_error("vlock: plugin support disabled");
@@ -453,7 +453,6 @@ int main(int argc, char *const argv[])
 
   secure_terminal();
   ensure_atexit(restore_terminal);
-
   auth_loop(username);
 
   free(username);
